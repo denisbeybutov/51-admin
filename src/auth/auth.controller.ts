@@ -13,6 +13,7 @@ import {
 	UseGuards
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger'
 import { Recaptcha } from '@nestlab/google-recaptcha'
 import { Request, Response } from 'express'
 
@@ -25,6 +26,7 @@ import { ProviderService } from './provider/provider.service'
 /**
  * Контроллер для управления авторизацией пользователей.
  */
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
 	/**
@@ -44,6 +46,10 @@ export class AuthController {
 	 * @param dto - Объект с данными для регистрации пользователя.
 	 * @returns Ответ от сервиса аутентификации.
 	 */
+	@ApiOperation({ summary: 'Регистрация нового пользователя' })
+	@ApiResponse({ status: 200, description: 'Пользователь успешно зарегистрирован' })
+	@ApiResponse({ status: 400, description: 'Невалидные данные или пользователь уже существует' })
+	@ApiBody({ type: RegisterDto })
 	@Recaptcha()
 	@Post('register')
 	@HttpCode(HttpStatus.OK)
@@ -57,6 +63,10 @@ export class AuthController {
 	 * @param dto - Объект с данными для входа пользователя.
 	 * @returns Ответ от сервиса аутентификации.
 	 */
+	@ApiOperation({ summary: 'Вход в систему' })
+	@ApiResponse({ status: 200, description: 'Успешная авторизация' })
+	@ApiResponse({ status: 401, description: 'Неверный email или пароль' })
+	@ApiBody({ type: LoginDto })
 	@Recaptcha()
 	@Post('login')
 	@HttpCode(HttpStatus.OK)
@@ -115,6 +125,8 @@ export class AuthController {
 	 * @param res - Объект ответа Express.
 	 * @returns Ответ от сервиса аутентификации.
 	 */
+	@ApiOperation({ summary: 'Выход из системы' })
+	@ApiResponse({ status: 200, description: 'Пользователь успешно вышел из системы' })
 	@Post('logout')
 	@HttpCode(HttpStatus.OK)
 	public async logout(

@@ -29,8 +29,8 @@ services: # Начало секции с сервисами
             - backend # Подключение к сети backend
 
 volumes: # Определение томов
-    postgres_data: # Том для хранения данных PostgreSQL
-    redis_data: # Том для хранения данных Redis
+    postgres_data: {} # Том для хранения данных PostgreSQL
+    redis_data: {} # Том для хранения данных Redis
 
 networks: # Определение сетей
-    backend # Сеть для внутреннего взаимодействия сервисов
+    backend: # Сеть для внутреннего взаимодействия сервисов

@@ -14,17 +14,33 @@ import { isDev } from '@/libs/common/utils/is-dev.util'
  */
 export const getMailerConfig = async (
 	configService: ConfigService
-): Promise<MailerOptions> => ({
-	transport: {
-		host: configService.getOrThrow<string>('MAIL_HOST'),
-		port: configService.getOrThrow<number>('MAIL_PORT'),
-		secure: !isDev(configService),
-		auth: {
-			user: configService.getOrThrow<string>('MAIL_LOGIN'),
-			pass: configService.getOrThrow<string>('MAIL_PASSWORD')
+): Promise<MailerOptions> => {
+	const mailHost = configService.get<string>('MAIL_HOST', 'smtp.ethereal.email')
+	const mailPort = configService.get<number>('MAIL_PORT', 587)
+	const mailLogin = configService.get<string>('MAIL_LOGIN', 'test@example.com')
+	const mailPassword = configService.get<string>('MAIL_PASSWORD', 'test-password')
+	const mailFrom = configService.get<string>('MAIL_FROM', mailLogin)
+
+	return {
+		transport: {
+			host: mailHost,
+			port: mailPort,
+			secure: mailPort === 465, // true для SSL (465), false для TLS (587)
+			auth: {
+				user: mailLogin,
+				pass: mailPassword
+			},
+			// Дополнительные настройки для предотвращения таймаутов
+			connectionTimeout: 10000, // 10 секунд
+			greetingTimeout: 10000, // 10 секунд
+			socketTimeout: 10000, // 10 секунд
+			// Для Resend через TLS (порт 587)
+			tls: {
+				rejectUnauthorized: false
+			}
+		},
+		defaults: {
+			from: mailFrom
 		}
-	},
-	defaults: {
-		from: `"TeaCoder Team" ${configService.getOrThrow<string>('MAIL_LOGIN')}`
 	}
-})
+}

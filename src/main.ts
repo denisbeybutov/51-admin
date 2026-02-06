@@ -1,6 +1,7 @@
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import RedisStore from 'connect-redis'
 import * as cookieParser from 'cookie-parser'
 import * as session from 'express-session'
@@ -66,6 +67,38 @@ async function bootstrap() {
 		exposedHeaders: ['set-cookie']
 	})
 
-	await app.listen(config.getOrThrow<number>('APPLICATION_PORT'))
+	// Настройка Swagger документации
+	const swaggerConfig = new DocumentBuilder()
+		.setTitle('NestJS Full Authorization API')
+		.setDescription('API документация для системы авторизации с поддержкой OAuth, двухфакторной аутентификации, подтверждения email и восстановления пароля')
+		.setVersion('1.0')
+		.addTag('auth', 'Эндпоинты авторизации и аутентификации')
+		.addTag('users', 'Управление пользователями')
+		.addTag('email-confirmation', 'Подтверждение электронной почты')
+		.addTag('password-recovery', 'Восстановление пароля')
+		.addCookieAuth('session', {
+			type: 'apiKey',
+			in: 'cookie',
+			name: 'session'
+		})
+		.build()
+
+	const document = SwaggerModule.createDocument(app, swaggerConfig)
+	SwaggerModule.setup('api/docs', app, document, {
+		customSiteTitle: 'NestJS Auth API',
+		customCss: '.swagger-ui .topbar { display: none }',
+		swaggerOptions: {
+			persistAuthorization: true,
+			docExpansion: 'none',
+			filter: true,
+			showRequestDuration: true
+		}
+	})
+
+	const port = config.getOrThrow<number>('APPLICATION_PORT')
+	await app.listen(port)
+	
+	console.log(`\n🚀 Application is running on: http://localhost:${port}`)
+	console.log(`📚 Swagger documentation: http://localhost:${port}/api/docs\n`)
 }
 bootstrap()

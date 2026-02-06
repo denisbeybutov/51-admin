@@ -7,7 +7,8 @@ import {
 	Param,
 	Patch
 } from '@nestjs/common'
-import { UserRole } from '@prisma/__generated__'
+import { ApiTags, ApiOperation, ApiResponse, ApiCookieAuth, ApiBody } from '@nestjs/swagger'
+import { UserRole } from '@prisma/client'
 
 import { Authorization } from '@/auth/decorators/auth.decorator'
 import { Authorized } from '@/auth/decorators/authorized.decorator'
@@ -18,6 +19,8 @@ import { UserService } from './user.service'
 /**
  * Контроллер для управления пользователями.
  */
+@ApiTags('users')
+@ApiCookieAuth('session')
 @Controller('users')
 export class UserController {
 	/**
@@ -31,6 +34,9 @@ export class UserController {
 	 * @param userId - ID авторизованного пользователя.
 	 * @returns Профиль пользователя.
 	 */
+	@ApiOperation({ summary: 'Получить профиль текущего пользователя' })
+	@ApiResponse({ status: 200, description: 'Профиль успешно получен' })
+	@ApiResponse({ status: 401, description: 'Не авторизован' })
 	@Authorization()
 	@HttpCode(HttpStatus.OK)
 	@Get('profile')
@@ -43,6 +49,11 @@ export class UserController {
 	 * @param id - ID пользователя.
 	 * @returns Найденный пользователь.
 	 */
+	@ApiOperation({ summary: 'Получить пользователя по ID (только для администраторов)' })
+	@ApiResponse({ status: 200, description: 'Пользователь найден' })
+	@ApiResponse({ status: 401, description: 'Не авторизован' })
+	@ApiResponse({ status: 403, description: 'Нет прав доступа' })
+	@ApiResponse({ status: 404, description: 'Пользователь не найден' })
 	@Authorization(UserRole.ADMIN)
 	@HttpCode(HttpStatus.OK)
 	@Get('by-id/:id')
@@ -56,6 +67,10 @@ export class UserController {
 	 * @param dto - Данные для обновления профиля.
 	 * @returns Обновленный профиль пользователя.
 	 */
+	@ApiOperation({ summary: 'Обновить профиль текущего пользователя' })
+	@ApiResponse({ status: 200, description: 'Профиль успешно обновлен' })
+	@ApiResponse({ status: 401, description: 'Не авторизован' })
+	@ApiBody({ type: UpdateUserDto })
 	@Authorization()
 	@HttpCode(HttpStatus.OK)
 	@Patch('profile')

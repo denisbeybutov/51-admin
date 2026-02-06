@@ -15,22 +15,37 @@ import { YandexProvider } from '@/auth/provider/services/yandex.provider'
  */
 export const getProvidersConfig = async (
 	configService: ConfigService
-): Promise<TypeOptions> => ({
-	baseUrl: configService.getOrThrow<string>('APPLICATION_URL'),
-	services: [
-		new GoogleProvider({
-			client_id: configService.getOrThrow<string>('GOOGLE_CLIENT_ID'),
-			client_secret: configService.getOrThrow<string>(
-				'GOOGLE_CLIENT_SECRET'
-			),
-			scopes: ['email', 'profile']
-		}),
-		new YandexProvider({
-			client_id: configService.getOrThrow<string>('YANDEX_CLIENT_ID'),
-			client_secret: configService.getOrThrow<string>(
-				'YANDEX_CLIENT_SECRET'
-			),
-			scopes: ['login:email', 'login:avatar', 'login:info']
-		})
-	]
-})
+): Promise<TypeOptions> => {
+	const services = []
+
+	// Добавляем Google Provider только если указаны credentials
+	const googleClientId = configService.get<string>('GOOGLE_CLIENT_ID')
+	const googleClientSecret = configService.get<string>('GOOGLE_CLIENT_SECRET')
+	if (googleClientId && googleClientSecret) {
+		services.push(
+			new GoogleProvider({
+				client_id: googleClientId,
+				client_secret: googleClientSecret,
+				scopes: ['email', 'profile']
+			})
+		)
+	}
+
+	// Добавляем Yandex Provider только если указаны credentials
+	const yandexClientId = configService.get<string>('YANDEX_CLIENT_ID')
+	const yandexClientSecret = configService.get<string>('YANDEX_CLIENT_SECRET')
+	if (yandexClientId && yandexClientSecret) {
+		services.push(
+			new YandexProvider({
+				client_id: yandexClientId,
+				client_secret: yandexClientSecret,
+				scopes: ['login:email', 'login:avatar', 'login:info']
+			})
+		)
+	}
+
+	return {
+		baseUrl: configService.getOrThrow<string>('APPLICATION_URL'),
+		services
+	}
+}

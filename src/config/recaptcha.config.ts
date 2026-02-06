@@ -14,8 +14,13 @@ import { isDev } from '@/libs/common/utils/is-dev.util'
  */
 export const getRecaptchaConfig = async (
 	configService: ConfigService
-): Promise<GoogleRecaptchaModuleOptions> => ({
-	secretKey: configService.getOrThrow<string>('GOOGLE_RECAPTCHA_SECRET_KEY'),
-	response: req => req.headers.recaptcha,
-	skipIf: isDev(configService)
-})
+): Promise<GoogleRecaptchaModuleOptions> => {
+	const isDevMode = isDev(configService)
+	const secretKey = configService.get<string>('GOOGLE_RECAPTCHA_SECRET_KEY', 'dev-secret-key')
+
+	return {
+		secretKey,
+		response: req => req.headers.recaptcha,
+		skipIf: isDevMode
+	}
+}
