@@ -53,7 +53,7 @@ export default function ProfilePage() {
 
     return (
         <main>
-            <h1>Профиль</h1>
+            <h1>Профиль1</h1>
 
             {user && (
                 <div>
