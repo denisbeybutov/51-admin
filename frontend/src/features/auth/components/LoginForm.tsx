@@ -11,26 +11,28 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import ReCAPTCHA from "react-google-recaptcha";
 import { useLoginMutation } from "../hooks/useLoginMutation";
+import Link from "next/link";
 
 
 export function LoginForm() {
     const { theme } = useTheme()
     const [recaptureValue, setRecaptureValue] = useState<string | null>(null)
+    const [isShowTwoFactor, setIsShowTwoFactor] = useState(false)
 
     const form = useForm<TypeLoginSchema>({
         resolver: zodResolver(LoginSchema),
         defaultValues: {
             email: '',
-            password: ''
+            password: '',
+            code: ''
         },
         mode: 'onSubmit'
     })
 
-    const {login, isLoadingLogin} = useLoginMutation()
+    const {login, isLoadingLogin} = useLoginMutation(setIsShowTwoFactor)
 
     const onSubmit = (values: TypeLoginSchema) => {
-        console.log('✅ LOGIN FORM VALUES:', values)
-        console.log('📧 EMAIL:', JSON.stringify(values.email))
+    
     
         if(recaptureValue) {
             login({values, recaptcha: recaptureValue})
@@ -39,10 +41,6 @@ export function LoginForm() {
         }
     }
 
-    useEffect(() => {
-        console.log('🔴 LOGIN FORM ERRORS:', form.formState.errors)
-        console.log('📧 CURRENT EMAIL:', JSON.stringify(form.getValues('email')))
-    }, [form.formState.errors])
 
     return (
         <AuthWrapper
@@ -53,19 +51,27 @@ export function LoginForm() {
             isShowSocial
         >
             <Form {...form}>
-                {/* <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-2 space-y-2"> */}
-                <form
-                    onSubmit={form.handleSubmit(
-                        onSubmit,
-                        (errors) => {
-                            console.log('❌ LOGIN INVALID:', errors)
-                            console.log('❌ VALUES AT INVALID:', form.getValues())
-                        }
-                    )}
-                    className="grid gap-2 space-y-2"
-                >
-                    
-                    <FormField
+                <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-2 space-y-2">
+
+                {isShowTwoFactor && (
+                     <FormField
+                     control={form.control}
+                     name='code'
+                     render={({field}) => (
+                         <FormItem>
+                             <FormLabel>Код</FormLabel>
+                             <FormControl>
+                                 <Input placeholder='123456' disabled={isLoadingLogin} {...field}/>
+                             </FormControl>
+                             <FormMessage/>
+                         </FormItem>
+                     )}
+                 />
+                )}
+
+                {!isShowTwoFactor && (
+                    <>
+                         <FormField
                         control={form.control}
                         name='email'
                         render={({field}) => (
@@ -83,7 +89,12 @@ export function LoginForm() {
                         name='password'
                         render={({field}) => (
                             <FormItem>
-                                <FormLabel>Пароль</FormLabel>
+                                <div className="flex items-center justify-between">
+                                    <FormLabel>Пароль</FormLabel>
+                                    <Link
+                                    href='/auth/reset-password'
+                                    className="ml-auto inline-block text-sm underline">Забыли пароль?</Link>
+                                </div>
                                 <FormControl>
                                     <Input placeholder='******' type="password" disabled={isLoadingLogin} {...field}/>
                                 </FormControl>
@@ -91,6 +102,9 @@ export function LoginForm() {
                             </FormItem>
                         )}
                     />
+                    </>
+                )}                    
+                   
                     <div className="flex justify-center">
                         <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY as string} onChange={setRecaptureValue} theme={theme === 'light' ? 'light' : 'dark'}/>
                     </div>
